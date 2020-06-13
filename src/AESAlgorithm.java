@@ -41,11 +41,20 @@ public class AESAlgorithm {
                 count.getAndIncrement();
             });
 
-            String password = JOptionPane.showInputDialog("Informe uma senha");
+            String password = JOptionPane.showInputDialog("Informe uma senha com 16 bytes separados por virgula");
+            byte[] passwordBytes = new byte[16];
+            String[] pedacos = password.split(",");
 
-            //Senha
+            try {
+                for (int j = 0; j < pedacos.length; j++) {
+                    passwordBytes[j] = (byte) Integer.parseInt(pedacos[j]);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             MessageDigest messageDigestSHA1 = MessageDigest.getInstance("SHA-1");
-            byte[] passwordBytes = messageDigestSHA1.digest(password.getBytes());
+            passwordBytes = messageDigestSHA1.digest(password.getBytes());
             System.out.println("SHA-1: " + new BigInteger(1, messageDigestSHA1.digest()).toString(16));
             SecretKeySpec secretKeySpec = new SecretKeySpec(Arrays.copyOf(passwordBytes, 16), "AES");
             //Senha
