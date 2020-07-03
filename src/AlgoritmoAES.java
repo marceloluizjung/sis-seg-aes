@@ -114,15 +114,23 @@ public class AlgoritmoAES {
     }
 
     // Cria um array de byte com base num roundkey (matriz de byte 4x4)
-    public static byte[] roundKeyToByte(byte[][] input) {
+    public static byte[] roundKeyToByte(byte[][] input, boolean inverse) {
 
         byte[][] inputAux = new byte[4][4];
         byte[] aux = new byte[16];
         int contador = 0;
 
-        for (int i = 0; i < input.length; i++) {
-            for (int j = 0; j < input[i].length; j++) {
-                inputAux[j][i] = input[i][j];
+        if (inverse) {
+            for (int i = 0; i < input.length; i++) {
+                for (int j = 0; j < input[i].length; j++) {
+                    inputAux[j][i] = input[i][j];
+                }
+            }
+        } else {
+            for (int i = 0; i < input.length; i++) {
+                for (int j = 0; j < input[i].length; j++) {
+                    inputAux[i][j] = input[i][j];
+                }
             }
         }
 
@@ -269,7 +277,7 @@ public class AlgoritmoAES {
                 roundkey[j] = xor3;
             }
 
-            keySchedule[i] = roundkey;
+            keySchedule[i] = roundkey.clone();
             System.out.println(roundKeyToHex(keySchedule[i]));
 
         }
@@ -281,7 +289,7 @@ public class AlgoritmoAES {
         System.out.println("Texto Simples");
         System.out.println(bytesToHex(textoSimples));
 
-        byte[] xorConteudo = xorWord(textoSimples, roundKeyToByte(roundkey));
+        byte[] xorConteudo = xorWord(textoSimples, roundKeyToByte(roundkey, true));
 
         System.out.println("AddRoundKey-Round=0");
         System.out.println(bytesToHex(xorConteudo));
@@ -289,9 +297,14 @@ public class AlgoritmoAES {
         //----------
 
         byte[] xorRound = null;
+        byte[] subConteudo = null;
         for (int i = 1; i <= 9; i++) {
 
-            byte[] subConteudo = subWord(xorConteudo);
+            if (xorRound == null) {
+                subConteudo = subWord(xorConteudo);
+            } else {
+                subConteudo = subWord(xorRound);
+            }
 
             System.out.println("SubBytes-Round=" + i);
             System.out.println(bytesToHex(subConteudo));
@@ -299,18 +312,20 @@ public class AlgoritmoAES {
             matrizEstado = shiftRows(subConteudo);
 
             System.out.println("ShiftRows-Round=" + i);
-            System.out.println(bytesToHex(roundKeyToByte(matrizEstado)));
+            System.out.println(bytesToHex(roundKeyToByte(matrizEstado, false)));
 
             for (int j = 0; j < matrizEstado.length; j++) {
                 matrizEstado = mixColumn(matrizEstado, j);
             }
 
             System.out.println("MixedColumns-Round=" + i);
-            System.out.println(bytesToHex(roundKeyToByte(matrizEstado)));
+            System.out.println(bytesToHex(roundKeyToByte(matrizEstado, false)));
 
             roundkey = keySchedule[i];
+            System.out.println("roundkey=" + i);
+            System.out.println(roundKeyToHex(roundkey));
 
-            xorRound = xorWord(roundKeyToByte(matrizEstado), roundKeyToByte(roundkey));
+            xorRound = xorWord(roundKeyToByte(matrizEstado, false), roundKeyToByte(roundkey, true));
 
             System.out.println("addRoundKey-Round=" + i);
             System.out.println(bytesToHex(xorRound));
@@ -318,7 +333,7 @@ public class AlgoritmoAES {
         }
 
 
-        byte[] subConteudo = subWord(xorRound);
+        subConteudo = subWord(xorRound);
 
         System.out.println("SubBytes-Round=10");
         System.out.println(bytesToHex(subConteudo));
@@ -326,13 +341,13 @@ public class AlgoritmoAES {
         matrizEstado = shiftRows(subConteudo);
 
         System.out.println("ShiftRows-Round=10");
-        System.out.println(bytesToHex(roundKeyToByte(matrizEstado)));
+        System.out.println(bytesToHex(roundKeyToByte(matrizEstado, false)));
 
         roundkey = keySchedule[10];
 
-        xorRound = xorWord(roundKeyToByte(matrizEstado), roundKeyToByte(roundkey));
+        xorRound = xorWord(roundKeyToByte(matrizEstado, false), roundKeyToByte(roundkey, true));
 
-        System.out.println("addRoundKey-Round 10");
+        System.out.println("addRoundKey-Round=10");
         System.out.println(bytesToHex(xorRound));
 
         //----------
